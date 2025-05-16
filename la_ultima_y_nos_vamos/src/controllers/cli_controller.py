@@ -11,7 +11,7 @@ class CLIController:
             if cmd == "salir":
                 break
             elif cmd == "ayuda":
-                print("Comandos: crear_encuesta, listar_encuestas, cerrar_encuesta <id>, ver_resultados <id>, mis_tokens, transferir_token <token_id> <nuevo_owner>, crear_usuario")
+                print("Comandos: crear_encuesta, listar_encuestas, cerrar_encuesta <id>, ver_resultados <id>, mis_tokens, transferir_token <token_id> <nuevo_owner>, crear_usuario, login")
             elif cmd.startswith("crear_encuesta"):
                 # Aquí deberías pedir datos y llamar a poll_service.crear_encuesta(...)
                 print("Funcionalidad crear_encuesta no implementada (demo).")
@@ -45,5 +45,20 @@ class CLIController:
                     print("Usuario registrado correctamente.")
                 else:
                     print("El usuario ya existe.")
+            elif cmd.startswith("login"):
+                username = input("Username: ").strip()
+                password = input("Password: ").strip()
+                import hashlib
+                usuario = self.user_service.usuario_repo.obtener_usuario(username)
+                if not usuario:
+                    print("Usuario no encontrado.")
+                    continue
+                salt = usuario.password_hash[:16]
+                password_hash = salt + hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000)
+                token = self.user_service.login(username, password_hash)
+                if token:
+                    print(f"Login exitoso. Token de sesión: {token}")
+                else:
+                    print("Credenciales incorrectas.")
             else:
                 print("Comando no reconocido.")

@@ -9,12 +9,6 @@ def votar_formulario(poll_id, opcion):
     # Aquí deberías conectar con PollService.vote
     return f"Voto registrado para encuesta {poll_id} opción {opcion} (demo)."
 
-def chatbot_responder(mensaje, historial=[]):
-    # Aquí deberías conectar con ChatbotService
-    respuesta = f"Respuesta IA simulada a: {mensaje}"
-    historial.append((mensaje, respuesta))
-    return "", historial
-
 def mostrar_tokens(tokens):
     if not tokens:
         return "No tienes tokens NFT."
@@ -25,6 +19,15 @@ def transferir_token(token_id, nuevo_owner):
     return f"Token {token_id} transferido a {nuevo_owner} (demo)."
 
 def crear_gradio_ui(poll_service=None, chatbot_service=None, nft_service=None, usuario_actual=None):
+
+    def gradio_chatbot_responder(mensaje, historial=[]):
+        if chatbot_service:
+            respuesta = chatbot_service.responder(mensaje, username=usuario_actual)
+        else:
+            respuesta = f"Respuesta IA simulada a: {mensaje}"
+        historial.append((mensaje, respuesta))
+        return "", historial
+
     with gr.Blocks() as demo:
         gr.Markdown("# Plataforma de Votaciones Interactivas")
 
@@ -37,7 +40,7 @@ def crear_gradio_ui(poll_service=None, chatbot_service=None, nft_service=None, u
             gr.Button("Votar").click(votar_formulario, inputs=["ID de encuesta para votar", "Opción"], outputs="text")
 
         with gr.Tab("Chatbot"):
-            gr.ChatInterface(fn=chatbot_responder)
+            gr.ChatInterface(fn=gradio_chatbot_responder)
 
         with gr.Tab("Tokens NFT"):
             tokens = [] if nft_service is None or usuario_actual is None else nft_service.tokens_por_usuario(usuario_actual)

@@ -3,6 +3,7 @@ class CLIController:
         self.poll_service = poll_service
         self.user_service = user_service
         self.nft_service = nft_service
+        self.current_user = None  # Para autenticación
 
     def run(self):
         print("CLI de votaciones. Escribe 'ayuda' para ver comandos.")
@@ -11,7 +12,23 @@ class CLIController:
             if cmd == "salir":
                 break
             elif cmd == "ayuda":
-                print("Comandos: crear_encuesta, listar_encuestas, cerrar_encuesta <id>, ver_resultados <id>, mis_tokens, transferir_token <token_id> <nuevo_owner>, crear_usuario, login")
+                print("Comandos: registro, login, crear_encuesta, listar_encuestas, cerrar_encuesta <id>, ver_resultados <id>, mis_tokens, transferir_token <token_id> <nuevo_owner>")
+            elif cmd == "registro":
+                username = input("Usuario: ").strip()
+                password = input("Contraseña: ").strip()
+                try:
+                    self.user_service.register(username, password)
+                    print("Usuario registrado exitosamente.")
+                except ValueError as e:
+                    print(f"Error: {e}")
+            elif cmd == "login":
+                username = input("Usuario: ").strip()
+                password = input("Contraseña: ").strip()
+                if self.user_service.authenticate(username, password):
+                    self.current_user = username
+                    print(f"Bienvenido, {username}!")
+                else:
+                    print("Usuario o contraseña incorrectos.")
             elif cmd.startswith("crear_encuesta"):
                 # Aquí deberías pedir datos y llamar a poll_service.crear_encuesta(...)
                 print("Funcionalidad crear_encuesta no implementada (demo).")
@@ -34,31 +51,5 @@ class CLIController:
                 print("Funcionalidad mis_tokens no implementada (demo).")
             elif cmd.startswith("transferir_token"):
                 print("Funcionalidad transferir_token no implementada (demo).")
-            elif cmd.startswith("crear_usuario"):
-                username = input("Username: ").strip()
-                password = input("Password: ").strip()
-                # Aquí deberías hashear el password antes de pasarlo al servicio
-                import hashlib, os
-                salt = os.urandom(16)
-                password_hash = salt + hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000)
-                if self.user_service.registrar(username, password_hash):
-                    print("Usuario registrado correctamente.")
-                else:
-                    print("El usuario ya existe.")
-            elif cmd.startswith("login"):
-                username = input("Username: ").strip()
-                password = input("Password: ").strip()
-                import hashlib
-                usuario = self.user_service.usuario_repo.obtener_usuario(username)
-                if not usuario:
-                    print("Usuario no encontrado.")
-                    continue
-                salt = usuario.password_hash[:16]
-                password_hash = salt + hashlib.pbkdf2_hmac('sha256', password.encode(), salt, 100000)
-                token = self.user_service.login(username, password_hash)
-                if token:
-                    print(f"Login exitoso. Token de sesión: {token}")
-                else:
-                    print("Credenciales incorrectas.")
             else:
                 print("Comando no reconocido.")

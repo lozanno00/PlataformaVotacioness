@@ -4,6 +4,7 @@ class CLIController:
         self.user_service = user_service
         self.nft_service = nft_service
         self.current_user = None  # Para autenticación
+        self.session_token = None  # Guardar token de sesión
 
     def run(self):
         print("CLI de votaciones. Escribe 'ayuda' para ver comandos.")
@@ -24,9 +25,11 @@ class CLIController:
             elif cmd == "login":
                 username = input("Usuario: ").strip()
                 password = input("Contraseña: ").strip()
-                if self.user_service.authenticate(username, password):
+                token = self.user_service.login(username, password)
+                if token:
                     self.current_user = username
-                    print(f"Bienvenido, {username}!")
+                    self.session_token = token
+                    print(f"Bienvenido, {username}! Token de sesión: {token}")
                 else:
                     print("Usuario o contraseña incorrectos.")
             elif cmd.startswith("crear_encuesta"):
